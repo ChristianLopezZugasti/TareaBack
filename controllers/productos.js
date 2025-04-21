@@ -113,6 +113,44 @@ const actualizarproducto = async(req , res= response) => {
     
 }
 
+const BorrarProducto = async(req, res) => {
+    const id = req.params.id
+  
+    
+    const existeProducto = await Producto.findByPk(id)
+
+    if(!existeProducto){
+        res.status(400).json({
+            msg: `El producto con id ${id} no existe`,
+            error: error.message
+        });
+    }
+
+    try{
+        const producto = await Producto.update(
+            {
+                estado:false
+            },
+            {
+                where:{
+                    idProducto: id 
+                }    
+            }
+                    
+        )
+    
+    
+        res.json({
+            'registros borrado': producto
+        })
+    
+    }catch(error){
+        res.json({
+            msg: 'error al borrar  el producto',
+            error: error
+        })
+    }
+}
 
 
-module.exports = { crearProducto,productosGet,productoGet,actualizarproducto}
+module.exports = { crearProducto,productosGet,productoGet,actualizarproducto,BorrarProducto}

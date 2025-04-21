@@ -1,5 +1,5 @@
 const {Router} = require('express')
-const { crearProducto, productosGet, productoGet, actualizarproducto } = require('../controllers/productos')
+const { crearProducto, productosGet, productoGet, actualizarproducto, BorrarProducto } = require('../controllers/productos')
 
 
 
@@ -12,6 +12,6 @@ router.post('/',crearProducto)
 
 router.put('/:id',actualizarproducto)
 
-//router.delete('/:id',borrarUsuario)
+router.delete('/:id',BorrarProducto)
 
 module.exports = router
