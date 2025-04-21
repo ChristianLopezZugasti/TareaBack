@@ -10,7 +10,7 @@ class Server {
         this.paths = {
             auth :      '/api/auth',
             usuarios:   '/api/usuarios',
-            categorias: '/api/categorias'
+            productos: '/api/productos'
         }
        
         this.app = express()
@@ -33,7 +33,7 @@ class Server {
     routes(){
         this.app.use(this.paths.usuarios,require('../routes/usuarios'))
         this.app.use(this.paths.auth,require('../routes/auth'))
-        //this.app.use(this.paths.categorias,categoriaRouter)    
+       this.app.use(this.paths.productos,require('../routes/productos'))    
     }
     listen() {
         const server = process.env.ENVIROMENT === 'local' ?
