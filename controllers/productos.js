@@ -4,6 +4,8 @@ const Producto = require('../models/producto')
 const bcryptjs = require('bcryptjs')
 
 
+//verificar que el usuario este autenticado, y que sea admin 
+
 const productosGet= async (req=request,res= response) => {
 
     const {limite = 5,desde = 0} = req.query

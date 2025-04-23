@@ -40,7 +40,7 @@ const login = async(req,res=response)=> {
 
 
         //General l JWT
-        const token = await generarJWT(user.dataValues.usuarioId)
+        const token = await generarJWT(user.dataValues.idUsuario)
         res.json({ //no se pone return , al poner el res, se retrona solito 
             user,
             token

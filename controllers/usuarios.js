@@ -3,7 +3,8 @@ const { request, response } = require("express")
 const Usuario = require("../models/usuario")
 
 const bcryptjs = require('bcryptjs')
-
+const jwt = require('jsonwebtoken')
+const validarToken = require("../middlewares/validar-jwt")
 
 //GET USUARIOS
 const usuariosGet =async (req = request, res = response) => {
@@ -11,7 +12,11 @@ const usuariosGet =async (req = request, res = response) => {
 
     const {limite = 5,desde = 0} = req.query
     
-    const usuarios = await Usuario.findAndCountAll()
+    const usuarios = await Usuario.findAndCountAll({
+        where:{
+            estado:true
+        }
+    })
 
 
     res.json(usuarios)
@@ -31,6 +36,7 @@ const usuarioGet =async (req = request, res = response) => {
 
 // POST
 const crearUsuario = async (req, res) => {
+    const token = req.header('x-token');
     const { nombre, correo, password,...resto } = req.body;
     const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -58,6 +64,9 @@ const crearUsuario = async (req, res) => {
     }
 
     try {
+        //VALIDAR JWT
+        const usuarioAutenticado = await validarToken(token)
+
         //regresa un arreglo 
         existeCorreo = await Usuario.findOne({
             where:{
@@ -126,38 +135,55 @@ const actualizarUsuario = async(req , res= response) => {
                 
     )
 
-
+    
     res.json(usuario)
 
 }
 
 //borrar registro.
-const borrarUsuario = async(req , res= response) => {
-    const id = req.params.id
-    
-    const existeUsario = await Usuario.findByPk(id)
 
-    if(!existeUsario){
-        res.status(400).json({
-            msg: `El usuario con id ${id} no existe`,
-            error: error.message
+const borrarUsuario = async(req = request, res = response) => {
+    const token = req.header('x-token');
+
+    try {
+        
+        
+        const usuarioAutenticado = await validarToken(token)
+        // Hasta aquí el token ya fue validado correctamente
+        const id = req.params.id;
+
+        const existeUsuario = await Usuario.findByPk(id);
+        if (!existeUsuario) {
+            return res.status(400).json({
+                msg: `El usuario con id ${id} no existe`
+            });
+        }
+
+        await Usuario.update(
+            { estado: false },
+            {
+                where: {
+                    idUsuario: id
+                }
+            }
+        );
+
+        res.json({
+            msg: 'Usuario borrado (lógicamente)',
+            idBorrado: id,
+            realizadoPor: usuarioAutenticado.getDataValue.nombre
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(401).json({
+            msg: 'Token no válido',
+            msg2: error
         });
     }
-
-    //borrar fisicamente, verificar si se pone un estado en true or false
-    const usuario = Usuario.destroy(
-        {
-            where:{
-                idUsuario: id 
-            }    
-        }
-                
-    )
-
-
-    res.json(usuario)
-
 }
+
+
 
 
 module.exports = {usuariosGet,usuarioGet, crearUsuario,actualizarUsuario,borrarUsuario}

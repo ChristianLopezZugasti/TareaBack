@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const Usuario = require('../models/usuario')
 
 
 const generarJWT = (uid = '') =>{
