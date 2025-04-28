@@ -10,7 +10,13 @@ const productosGet= async (req=request,res= response) => {
 
     const {limite = 5,desde = 0} = req.query
     
-    const productos = await Producto.findAndCountAll()
+    const productos = await Producto.findAndCountAll({
+        where:{
+            estado:true
+        },
+        offset: Number(desde),
+        limit: Number(limite),
+    })
 
 
     res.json(productos)
@@ -78,14 +84,22 @@ const crearProducto = async (req= request , res= response) => {
 const actualizarproducto = async(req , res= response) => {
     const id = req.params.id
     const {estado,...data} = req.body
+    //const data = req.body
     
+    
+    
+    if(!id){
+        res.status(400).json({
+            msg: `El id Debe venir`,
+        });
+    }
+   
     const existeProducto = await Producto.findByPk(id)
 
     if(!existeProducto){
         res.status(400).json({
             msg: `El producto con id ${id} no existe`,
-            error: error.message
-        });
+         });
     }
 
     try{
