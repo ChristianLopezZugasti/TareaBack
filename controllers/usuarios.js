@@ -36,7 +36,7 @@ const usuarioGet =async (req = request, res = response) => {
 
 // POST
 const crearUsuario = async (req, res) => {
-    const token = req.header('x-token');
+   // const token = req.header('x-token');
     const { nombre, correo, password,...resto } = req.body;
     const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -65,7 +65,7 @@ const crearUsuario = async (req, res) => {
 
     try {
         //VALIDAR JWT
-        const usuarioAutenticado = await validarToken(token)
+     //   const usuarioAutenticado = await validarToken(token)
 
         //regresa un arreglo 
         existeCorreo = await Usuario.findOne({
@@ -99,13 +99,15 @@ const crearUsuario = async (req, res) => {
         console.log(nuevoUsuario)
         res.status(201).json({
             msg: "Usuario creado con éxito",
-            usuario: nuevoUsuario
+            usuario: nuevoUsuario,
+            replyCode: 201
         });
     } catch (error) {
         console.error(error);  // Muestra el error en la consola
         res.status(500).json({
             msg: "Hubo un error al crear el usuario",
-            error: error.message
+            error: error.message,
+            replyCode: 500
         });
     }
 };

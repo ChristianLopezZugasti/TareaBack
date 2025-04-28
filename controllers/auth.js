@@ -23,7 +23,8 @@ const login = async(req,res=response)=> {
        
         if(!user){
             return res.status(400).json({
-                msg: "Usuario / pass no son correctos -email"
+                msg: "Usuario / pass no son correctos -email",
+                replyCode: 400
             })
         }
 
@@ -34,7 +35,8 @@ const login = async(req,res=response)=> {
 
         if( !validPassword){
             return res.status(400).json({
-                msg: "Usuario /pass no son correctos -Password"
+                msg: "Usuario /pass no son correctos -Password",
+                replyCode: 400
             })
         }
 
@@ -43,14 +45,16 @@ const login = async(req,res=response)=> {
         const token = await generarJWT(user.dataValues.idUsuario)
         res.json({ //no se pone return , al poner el res, se retrona solito 
             user,
-            token
+            token,
+            replyCode: 200
             
         })
     }catch(error){
         console.log(error)
         return res.status(500).json({
             msg:"se chafio algo",
-            error: error
+            error: error,
+            replyCode: 500
         })
     }
 
