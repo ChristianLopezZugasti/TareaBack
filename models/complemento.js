@@ -1,11 +1,20 @@
 const {db} = require('../db/configure')
 const { DataTypes } = require('sequelize');
+const Producto = require('./producto');
 
-const Producto = db.define('producto',{
-    idproducto:{
+const Complemento = db.define('complemento',{
+    idcomplemento:{
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
+    },
+    idproducto:{
+        type: DataTypes.INTEGER,
+        references: {
+            name: 'fk_complemento_producto',
+            model: Producto,
+            key: 'idproducto'
+        }
     },
     nombre: {
         type: DataTypes.STRING,
@@ -19,29 +28,11 @@ const Producto = db.define('producto',{
             }
         }
     },
-    descripcion: {
-        type: DataTypes.STRING,
-        
-    },
-    precio:{  
-        type: DataTypes.INTEGER,
-    },
-    descuento: {
-        type: DataTypes.FLOAT,
-        defaultValue: 0
-      },
-
     estado:{
         type: DataTypes.BOOLEAN,
         defaultValue: true
     },
-    disponible:{
-        type: DataTypes.BOOLEAN,
-        defaultValue: true
-    },
-    CreatedAt:{ //si se pone createAt se pone loko 
-        type: DataTypes.DATE
-    },
+    
 
 
 
@@ -49,8 +40,9 @@ const Producto = db.define('producto',{
 },{
     freezeTableName: true,
     timestamps: false,
-  
   })
 
 
-module.exports = Producto
+
+  
+module.exports = Complemento

@@ -1,21 +1,30 @@
 const { request, response } = require("express")
 
-const Producto = require('../models/producto')
 const bcryptjs = require('bcryptjs')
+const { Complemento,Producto } = require("../models")
 
 
 //verificar que el usuario este autenticado, y que sea admin 
 
 const productosGet= async (req=request,res= response) => {
-
-    const {limite = 5,desde = 0} = req.query
+    
+    const {limite = 20,desde = 0} = req.query
     
     const productos = await Producto.findAndCountAll({
         where:{
             estado:true
         },
-        offset: Number(desde),
-        limit: Number(limite),
+        //offset: Number(desde),
+        //limit: Number(limite),
+        include: {
+            model: Complemento,
+            as: 'complementos',
+            attributes: ['idcomplemento','nombre'],
+            where:{
+                estado:true
+            },
+            required: false // Esto permite que se devuelvan productos sin complementos
+        },
     })
 
 
@@ -26,7 +35,17 @@ const productoGet= async (req=request,res= response) => {
    
     const {id} = req.params
 
-    const producto = await Producto.findByPk(id)
+    const producto = await Producto.findByPk(id,{
+        include:{
+            model: Complemento,
+            as: 'complementos',
+            attributes: ['idcomplemento','nombre'],
+            where:{
+                estado:true
+            },
+            required: false // Esto permite que se devuelvan productos sin complementos
+        }
+    })
 
     
 
@@ -34,16 +53,26 @@ const productoGet= async (req=request,res= response) => {
 }
 
 const crearProducto = async (req= request , res= response) => {
-    const { nombre, descripcion, precio,...resto } = req.body;
-    
-
+    const { nombre, descripcion, precio,descuento,complementos,...resto } = req.body;
+    const complementosArray = []
     //VALIDAR CAMPOS VACIOS
-    if(!nombre || !descripcion || !precio)
-        res.status(400).json({
+    if(!nombre || !descripcion || !precio   )
+        return res.status(400).json({
             msg: "Datos invalidos, campos obligatorios"
         }); 
-
-
+    //validar que el precio sea un numero
+    if (isNaN(precio) || precio <= 0) {
+        return res.status(400).json({
+            msg: "El precio debe ser un numero",
+        });
+    }
+    //validar que el descuento sea un numero
+    if (isNaN(descuento) || descuento <= 0) {
+        return res.status(400).json({
+            msg: "El descuento debe ser un numero mayor o igual a 0",
+        });
+    }
+    
 
     try {
         //regresa un arreglo 
@@ -53,24 +82,47 @@ const crearProducto = async (req= request , res= response) => {
             }
         })
 
-      
+        
         if (existeProducto){
             return res.status(400).json({
                 msg: "El producto ya existe",
             }); 
         }
+        
+        
 
-
-        // Creación del nuevo usuario
+        // Creación del nuevo producto 
         const nuevoProducto = await Producto.create({
-            nombre: nombre,
-            descripcion: descripcion,
-            precio
+            nombre,
+            descripcion,
+            precio,
+            descuento,
+            CreatedAt: new Date(),
         });
+
+        //comprobar si vienen los complementos
+        if(complementos){
+            if(!Array.isArray(complementos)){
+                return res.status(400).json({
+                    msg: "Los complementos deben ser un arreglo",
+                }); 
+            }  
+            
+            
+
+            //creacion de los complementos
+            for ( const comp of complementos){
+                complementosArray.push(await Complemento.create({ nombre: comp, idproducto: nuevoProducto.idproducto  }));
+            }
+    
+        }
+
+        
 
         res.status(201).json({
             msg: "Producto creado con éxito",
-            usuario: nuevoProducto
+            usuario: nuevoProducto,
+            complementos: complementosArray 
         });
     } catch (error) {
         console.error(error);  // Muestra el error en la consola
@@ -83,10 +135,9 @@ const crearProducto = async (req= request , res= response) => {
 
 const actualizarproducto = async(req , res= response) => {
     const id = req.params.id
-    const {estado,...data} = req.body
+    const {estado,complementos,...data} = req.body
     //const data = req.body
-    
-    
+    const complementosArray = []
     
     if(!id){
         res.status(400).json({
@@ -102,21 +153,47 @@ const actualizarproducto = async(req , res= response) => {
          });
     }
 
+    
     try{
         const producto = await Producto.update(
             data,
             {
                 where:{
-                    idProducto: id 
+                    idproducto: id 
                 }    
             }
                     
         )
     
-    
+        if(complementos){
+            if(!Array.isArray(complementos)){
+                return res.status(400).json({
+                    msg: "Los complementos deben ser un arreglo",
+                }); 
+            }           
+        
+            //Eliminamos todos los registros previos
+            await Complemento.update({estado:false},{
+                where:{
+                    idproducto: id
+                }
+            })
+            //Insertamos los nuevos registros de complementos
+            for ( const comp of complementos){
+                console.log('complemento',comp)
+                complementosArray.push(await Complemento.create({
+                    nombre: comp,
+                    idproducto:id,
+                })
+                )
+            }
+        }
+      
+        
         res.json({
             'registros actualizados:':producto,
-            data
+            data,
+            complementosArray
         })
     
     }catch(error){
@@ -152,8 +229,15 @@ const BorrarProducto = async(req, res) => {
                     idProducto: id 
                 }    
             }
-                    
         )
+
+         //Eliminamos todos los registros de complementos
+         await Complemento.update({estado:false},{
+            where:{
+                idproducto: id
+            }
+        })
+
     
     
         res.json({
@@ -170,3 +254,6 @@ const BorrarProducto = async(req, res) => {
 
 
 module.exports = { crearProducto,productosGet,productoGet,actualizarproducto,BorrarProducto}
+
+
+
