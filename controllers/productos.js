@@ -55,19 +55,20 @@ const productoGet= async (req=request,res= response) => {
 const crearProducto = async (req= request , res= response) => {
     const { nombre, descripcion, precio,descuento,complementos,...resto } = req.body;
     const complementosArray = []
+        
     //VALIDAR CAMPOS VACIOS
     if(!nombre || !descripcion || !precio   )
         return res.status(400).json({
             msg: "Datos invalidos, campos obligatorios"
         }); 
     //validar que el precio sea un numero
-    if (isNaN(precio) || precio <= 0) {
+    if (isNaN(precio) || precio < 0) {
         return res.status(400).json({
             msg: "El precio debe ser un numero",
         });
     }
     //validar que el descuento sea un numero
-    if (isNaN(descuento) || descuento <= 0) {
+    if (isNaN(descuento) || descuento < 0) {
         return res.status(400).json({
             msg: "El descuento debe ser un numero mayor o igual a 0",
         });
