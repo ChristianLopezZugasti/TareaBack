@@ -5,6 +5,7 @@ const Usuario = require("../models/usuario")
 const bcryptjs = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const validarToken = require("../middlewares/validar-jwt")
+const { esFechaValida } = require("../helpers/functions")
 
 //GET USUARIOS
 const usuariosGet =async (req = request, res = response) => {
@@ -37,18 +38,24 @@ const usuarioGet =async (req = request, res = response) => {
 // POST
 const crearUsuario = async (req, res) => {
    // const token = req.header('x-token');
-    const { nombre, correo, password,...resto } = req.body;
+    const { nombre, correo, password,cumpleanios,...resto } = req.body;
     const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 
-    
-
     //VALIDAR CAMPOS VACIOS
-    if(!nombre || !correo || !password)
+    if(!nombre || !correo || !password || !cumpleanios  )
         res.status(400).json({
             msg: "Datos invalidos, campos obligatorios"
         }); 
-
+    
+    //validar cumpleanios
+    console.log(esFechaValida(cumpleanios))
+    if(!esFechaValida(cumpleanios)){
+       return res.status(400).json({
+            msg: "Fecha de cumpleaños inválida",
+        });
+    }
+        
  
     //validar correo
     if (!regexCorreo.test(correo)) {
@@ -86,13 +93,12 @@ const crearUsuario = async (req, res) => {
         passwordCifrada = bcryptjs.hashSync(password,salt)
 
 
-
-
         // Creación del nuevo usuario
         const nuevoUsuario = await Usuario.create({
             nombre: nombre,
             correo: correo,
             password: passwordCifrada
+            ,cumpleanios: cumpleanios,
         });
 
         // Responder con el usuario creado
@@ -116,6 +122,7 @@ const crearUsuario = async (req, res) => {
 const actualizarUsuario = async(req , res= response) => {
     const id = req.params.id
     const {correo,password,...data} = req.body
+    //TODO verifiar cumpleanio
     
     const existeUsario = await Usuario.findByPk(id)
 
@@ -136,8 +143,6 @@ const actualizarUsuario = async(req , res= response) => {
         }
                 
     )
-
-    
     res.json(usuario)
 
 }

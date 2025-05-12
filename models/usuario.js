@@ -30,6 +30,9 @@ const Usuario = db.define('usuario',{
         type: DataTypes.ENUM('USER_ROLE','ADMIN_ROLE'),
         defaultValue: 'USER_ROLE'
     },
+    cumpleanios:{
+        type: DataTypes.DATE,
+    },
     estado:{
         type: DataTypes.BOOLEAN,
         defaultValue: true
